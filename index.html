@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Water & Urine Tracker</title>
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; }
+    h1 { text-align: center; }
+    label, select, input { display: block; margin: 10px 0; width: 100%; }
+    button { padding: 10px; margin-top: 10px; width: 100%; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>💧 Intake & Output Tracker<br><small>पाणी आणि मूत्र नोंद</small></h1>
+
+  <label for="type">Type / प्रकार:</label>
+  <select id="type">
+    <option value="water">Water Intake / पाणी</option>
+    <option value="urine">Urine Output / मूत्र</option>
+  </select>
+
+  <label for="amount">Amount (ml) / प्रमाण (मिली):</label>
+  <input type="number" id="amount" placeholder="Enter amount in ml">
+
+  <button onclick="addEntry()">Add Entry / नोंद जोडा</button>
+
+  <h2>📊 Today's Summary / आजचा सारांश</h2>
+  <p id="summary"></p>
+
+  <h2>🗓️ History / इतिहास</h2>
+  <table id="history">
+    <tr><th>Time / वेळ</th><th>Type / प्रकार</th><th>Amount (ml)</th></tr>
+  </table>
+
+  <script>
+    const STORAGE_KEY = 'waterUrineEntries';
+    const entries = loadEntries();
+
+    function getTodayDateKey() {
+      const today = new Date();
+      return today.toISOString().split('T')[0]; // "2025-11-12"
+    }
+
+    function loadEntries() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (!data) return [];
+      const parsed = JSON.parse(data);
+      const todayKey = getTodayDateKey();
+      // Only load today's data
+      return parsed.date === todayKey ? parsed.entries : [];
+    }
+
+    function saveEntries() {
+      const todayKey = getTodayDateKey();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: todayKey, entries }));
+    }
+
+    function addEntry() {
+      const type = document.getElementById('type').value;
+      const amount = parseInt(document.getElementById('amount').value);
+      const time = new Date().toLocaleTimeString();
+
+      if (!amount || amount <= 0) return alert("Please enter a valid amount.");
+
+      entries.push({ type, amount, time });
+      saveEntries();
+      updateSummary();
+      updateHistory();
+      document.getElementById('amount').value = '';
+    }
+
+    function updateSummary() {
+      const water = entries.filter(e => e.type === 'water').reduce((sum, e) => sum + e.amount, 0);
+      const urine = entries.filter(e => e.type === 'urine').reduce((sum, e) => sum + e.amount, 0);
+      const net = water - urine;
+
+      document.getElementById('summary').innerText =
+        `Water: ${water} ml | Urine: ${urine} ml | Net: ${net} ml`;
+    }
+
+    function updateHistory() {
+      const table = document.getElementById('history');
+      table.innerHTML = '<tr><th>Time / वेळ</th><th>Type / प्रकार</th><th>Amount (ml)</th></tr>';
+      entries.forEach(e => {
+        const row = `<tr><td>${e.time}</td><td>${e.type === 'water' ? 'पाणी' : 'मूत्र'}</td><td>${e.amount}</td></tr>`;
+        table.innerHTML += row;
+      });
+    }
+
+    // Initialize on page load
+    updateSummary();
+    updateHistory();
+  </script>
+</body>
+</html>
