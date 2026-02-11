@@ -1,1 +1,1 @@
-Live - https://github.com/ankitmadridista/water-urine-tracker
+Live - https://ankitmadridista.github.io/water-urine-tracker
